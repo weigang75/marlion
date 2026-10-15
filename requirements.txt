@@ -1,0 +1,5 @@
+svgwrite==1.4.3
+CairoSVG==2.7.1
+svgpathtools==1.6.1
+shapely==2.0.7
+numpy==1.24.4

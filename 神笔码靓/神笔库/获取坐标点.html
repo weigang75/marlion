@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Click Coordinates</title>
+    <style>
+        embed {
+            /*width: 1800px;*/
+            /*height: 1100px;*/
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        div#mySvgDiv, body {
+            padding: 0;
+            margin: 0;
+            top: 0;
+            left: 0;
+            width: 1800px;
+            height: 1100px;
+            background-color: transparent;
+            z-index: 10000;
+
+            /*opacity: 35%;*/
+        }
+
+        #coordinates {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px;
+            border-radius: 3px;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            border: gray solid 1px;
+            width: 120px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="mySvgDiv" onclick="showCoordinates(event)">
+    <embed id="mySvg" src="" style="z-index:-1">
+</div>
+
+<div id="coordinates"></div>
+<script>
+    var last_x = 0;
+    var last_y = 0;
+    var paths = "";
+    var dragged = false;
+
+    function clear() {
+        last_x = 0;
+        last_y = 0;
+        paths = "";
+        alert('');
+    }
+
+    function showDistance(event) {
+        if (last_x == 0 && last_y == 0) {
+            return
+        }
+        var px = event.pageX; // 获取鼠标相对于文档的x坐标
+        var py = event.pageY; // 获取鼠标相对于文档的y坐标
+        var dx = px - last_x;
+        var dy = py - last_y;
+        var distance = Math.sqrt(dx * dx + dy * dy);
+        // parseFloat(num.toFixed(2))
+        coordinatesElement = document.getElementById('coordinates')
+
+        coordinatesElement.innerHTML = coordinatesElement.innerHTML +
+            "\ndx=" + dx + ",dy=" + dy + ",d=" + distance.toFixed(2);
+
+        // coordinatesElement.innerHTML = px + ", " + py;
+    }
+
+    function load_img() {
+        var url = new URL(window.location.href);
+        var params = url.searchParams;
+        var mySvg = document.getElementById("mySvg");
+        if (params == "") {
+            // src = "../输出文件/室内设计高清图.svg"
+            // mySvg.src = src
+            alert("请在 获取坐标点.html? 后面提供需要显示的svg图片")
+        } else {
+            var svgPath = decodeURIComponent(params.toString())
+            console.log(svgPath)
+            if (!svgPath.includes("/")) {
+                svgPath = "../输出文件/" + svgPath
+            }
+            // 添加 load 事件监听器
+            mySvg.addEventListener("load", function () {
+                var width = mySvg.clientWidth; // 获取图片的宽度
+                var height = mySvg.clientHeight; // 获取图片的高度
+                if(width<1000){
+                    width = 1080;
+                    height = 2376;
+                }
+                var mySvgDiv = document.getElementById("mySvgDiv");
+                mySvgDiv.style.width = width + "px";
+                mySvgDiv.style.height = height + "px";
+                // debugger;
+            });
+            // var 参数值 = params.get("参数");
+            mySvg.src = svgPath.slice(0, -1);
+            // setTimeout(()=>{
+            //     // var mySvg = document.getElementById("mySvg");
+            //     var width = mySvg.clientWidth; // 获取图片的宽度
+            //     var height = mySvg.clientHeight; // 获取图片的高度
+            //
+            //     var mySvgDiv = document.getElementById("mySvgDiv");
+            //     mySvgDiv.style.width = width+"px";
+            //     mySvgDiv.style.height = height+"px";
+            //     // debugger;
+            // },1000);
+        }
+    }
+
+    load_img()
+
+    function showCoordinates(event) {
+        var mySvg = document.getElementById("mySvg");
+        var width = mySvg.clientWidth; // 获取图片的宽度
+        var height = mySvg.clientHeight; // 获取图片的高度
+        var px = event.pageX; // 获取鼠标相对于文档的x坐标
+        var py = event.pageY; // 获取鼠标相对于文档的y坐标
+
+        var coordinates = "x=" + px + ", y=" + py;
+        coordinatesElement = document.getElementById('coordinates')
+        coordinatesElement.innerHTML = coordinates;
+        if (paths == "") {
+            paths = '("移动", ' + px + ', ' + py + '),\n';
+        } else if (px == last_x && py == last_y) {
+
+        } else if (px == last_x) {
+            paths += '("垂直线", ' + py + '),\n';
+        } else if (py == last_y) {
+            paths += '("水平线", ' + px + '),\n';
+        } else {
+            paths += '("直线", ' + px + ', ' + py + '),\n';
+        }
+        console.clear();
+        console.log(paths);
+        if (!dragged) {
+            // 设置#coordinates元素的样式，使其显示在鼠标的右上方
+            x_offset = 0;
+            y_offset = 0;
+            if (px < width - 120) {
+                x_offset = 10;
+            } else {
+                x_offset = -105
+            }
+
+            if (py < height - 60) {
+                y_offset = 10;
+            } else {
+                y_offset = -25
+            }
+            coordinatesElement.style.position = 'absolute';
+            coordinatesElement.style.display = "block";
+            coordinatesElement.style.left = (px + x_offset) + 'px'; // 鼠标右侧10像素
+            coordinatesElement.style.top = (py + y_offset) + 'px'; // 鼠标上方
+        }
+        showDistance(event);
+        last_x = px;
+        last_y = py;
+    }
+
+    // 获取要拖动的元素
+    var draggable = document.getElementById('coordinates');
+
+    // 记录鼠标按下时的初始位置和元素初始位置
+    var initialX, initialY, offsetX, offsetY;
+
+    draggable.addEventListener('mousedown', function (e) {
+        initialX = e.clientX;
+        initialY = e.clientY;
+        offsetX = draggable.offsetLeft;
+        offsetY = draggable.offsetTop;
+
+        document.addEventListener('mousemove', drag);
+    });
+
+    document.addEventListener('mouseup', function () {
+        document.removeEventListener('mousemove', drag);
+    });
+
+    function drag(e) {
+        draggable.style.left = (e.clientX - initialX + offsetX) + 'px';
+        draggable.style.top = (e.clientY - initialY + offsetY) + 'px';
+        dragged = true;
+    }
+</script>
+
+
+</body>
+</html>

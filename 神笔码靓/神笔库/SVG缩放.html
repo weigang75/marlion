@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG缩放</title>
+    <style>
+        embed {
+            /*width: 1800px;*/
+            /*height: 1100px;*/
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        body {
+            padding: 0;
+            margin: 0;
+            top: 0;
+            left: 0;
+            /*width: 1800px;*/
+            /*height: 1100px;*/
+            background-color: transparent;
+            z-index: 10000;
+
+            /*opacity: 35%;*/
+        }
+    </style>
+</head>
+<body  >
+<div id="mySvgDiv">
+    <embed id="mySvg" src="" style="z-index:-1;border: #2329D6 solid 3px;">
+</div>
+
+
+<script>
+
+
+    function load_img() {
+        var url = new URL(window.location.href);
+        var params = url.searchParams;
+        var mySvg = document.getElementById("mySvg");
+        if (params == "") {
+            // src = "../输出文件/室内设计高清图.svg"
+            // mySvg.src = src
+            alert("请在 SVG缩放.html? 后面提供需要显示的svg图片")
+        } else {
+            var svgPath = decodeURIComponent(params.toString())
+            console.log(svgPath)
+            if (!svgPath.includes("/")) {
+                svgPath = "../输出文件/" + svgPath
+            }
+            // 添加 load 事件监听器
+            mySvg.addEventListener("load", function () {
+                var width = mySvg.clientWidth; // 获取图片的宽度
+                var height = mySvg.clientHeight; // 获取图片的高度
+                if(width<1000){
+                    width = 1080;
+                    height = 2376;
+                }
+                var mySvgDiv = document.getElementById("mySvgDiv");
+                let scale = 2;
+
+                mySvg.style.scale = scale;
+                // mySvgDiv.style.width = (scale*width) + "px";
+                // mySvgDiv.style.height = (scale*height) + "px";
+                mySvgDiv.style.translate = (mySvgDiv.clientWidth/scale)+"px"+" "+ (mySvgDiv.clientHeight/scale)+ "px";
+                // mySvgDiv.style.translate = "300px 500px"
+                // mySvgDiv.style.translate = "100% 100%"
+
+                // debugger;
+            });
+            // var 参数值 = params.get("参数");
+            mySvg.src = svgPath.slice(0, -1);
+            // setTimeout(()=>{
+            //     // var mySvg = document.getElementById("mySvg");
+            //     var width = mySvg.clientWidth; // 获取图片的宽度
+            //     var height = mySvg.clientHeight; // 获取图片的高度
+            //
+            //     var mySvgDiv = document.getElementById("mySvgDiv");
+            //     mySvgDiv.style.width = width+"px";
+            //     mySvgDiv.style.height = height+"px";
+            //     // debugger;
+            // },1000);
+        }
+    }
+
+    load_img()
+
+
+</script>
+
+
+</body>
+</html>

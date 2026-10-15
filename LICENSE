@@ -1,21 +1,8 @@
-MIT License
+# 免责声明
+* 本项目的代码和资料来源于多方面的信息和知识，作者已尽力确保其准确性和完整性。然而，由于人为因素或其他不可抗力因素，本项目无法保证其内容的完全准确性和及时性。
+使用者应该自行验证和核实其所使用的任何代码和资料，作者不承担任何直接或间接的责任和义务。
 
-Copyright (c) 2026 weigang75
+* 本项目的开源代码和资料可能包含来自第三方的知识产权和版权，作者已尽力尊重和保护这些权益。
+如果本项目的内容侵犯了任何人的知识产权和版权，请通过 pythoncr@126.com 与作者联系，作者会尽快删除相关内容。
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+* 本项目作者拥有对本项目的最终解释权和修改权，作者保留在任何时候修改或终止本项目的权利。
