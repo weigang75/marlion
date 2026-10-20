@@ -10,7 +10,7 @@ build-backend = "hatchling.build"
 # 项目的名称。
 name = "marlion"
 # 项目的版本号。
-version = "0.1.0"
+version = "0.2.0"
 # 作者信息列表，包含作者的姓名和电子邮件。
 authors = [{ name = "weigang" }, { email = "gang.wei@qq.com" }]
 # 项目的描述。
@@ -61,3 +61,12 @@ exclude = ["神笔码靓/新手营", "神笔码靓/成果馆", "神笔码靓/神
     ".gitignore", "LICENSE", "pyproject.toml", "README.md", "requirements.txt", "setup.py"]
 
 
+# 打包使用说明
+# https://blog.csdn.net/ouguangqian/article/details/128148295
+# 1. 创建README.md文件、创建LICENSE文件
+# 2. python -m pip install --upgrade pip
+# 3. python -m build      ->  如果 出现 'No module named build' 则先 `pip install build`
+# 3. python -m build --wheel --outdir=dist ->  如果 出现 'No module named build' 则先 `pip install build`
+# 安装包说明
+# 4. cd dist
+# 5. pip install marlion-0.2.0-py3-none-any.whl

@@ -20,6 +20,7 @@ from 神笔码靓.神笔库.通用工具集 import *
 from 神笔码靓.神笔库.配置 import *
 from 神笔码靓.神笔库.元素库 import *
 from 神笔码靓.神笔库.PDF工具集 import PDF工具集
+from 神笔码靓.神笔库.时间脚本 import 触发时机
 
 
 class 神笔绘图板:
@@ -102,6 +103,8 @@ class 神笔绘图板:
 
         self._复用模板支持 = {}
         self.jscripts = []
+        self._时间脚本 = None          # 懒创建：见 注册时间事件()
+        self._时间脚本已注入 = False
 
     def _gen_id(self, perfix):
         _id = f"{perfix}_{self._id_no}"
@@ -2368,9 +2371,211 @@ class 神笔绘图板:
     def 增加JS代码(self, JS代码):
         self.jscripts.append(JS代码)
 
+    # ---------- 时间脚本（见 时间脚本.py） ----------
+    # 框架只负责“什么时候回调”，不碰任何元素、不注册任何 DOM 事件。
+    @property
+    def 时间脚本(self):
+        if self._时间脚本 is None:
+            from 神笔码靓.神笔库.时间脚本 import 时间脚本
+            self._时间脚本 = 时间脚本()
+        return self._时间脚本
+
+    @property
+    def 时间管家(self):
+        """旧名，等价于 时间脚本。"""
+        return self.时间脚本
+
+    @property
+    def 时间调度器(self):
+        """旧名，等价于 时间脚本。"""
+        return self.时间脚本
+
+    def 注册时间事件(self, 触发=触发时机.每秒, 代码="", 名称=None, *,
+                    毫秒=None, 时刻=None, 时间=None, 数据=None,
+                    次数=None, 首帧=None, 补发=None, 启用=None):
+        """登记一个时间事件；保存作品时自动内联注入脚本（同一作品只注入一次）。
+
+        框架只负责“什么时候调用”，不碰任何元素、不注册任何 DOM 事件；
+        元素怎么动全部写在 代码 里。
+
+        Parameters
+        ----------
+        触发 : 触发时机，默认 触发时机.每秒
+            写枚举，不要写裸字符串。`from 神笔码靓.神笔库.时间脚本 import 触发时机`
+
+            ==========  ========================================  =====================
+            触发        什么时候调用                              额外参数
+            ==========  ========================================  =====================
+            启动        打开作品时一次（首帧之前）                无
+            每帧        每个动画帧，约 60 次/秒                   无
+            每秒        每跨过一个整秒                            无
+            每分        每跨过一个整分                            无
+            每时        每跨过一个整点                            无
+            每天        每跨过一天（本地 0 点）                   无
+            周期        每隔固定毫秒                              毫秒=
+            时刻        每天到达指定钟面时刻                      时刻="07:30"
+            一次        到达指定绝对时间后一次                    时间="2026-10-20 15:30"
+            ==========  ========================================  =====================
+
+            `print(触发时机.帮助())` 可打印完整清单和示例。
+            旧写法 "每秒" 仍兼容，但新代码请用枚举。
+
+        代码 : str
+            JS 回调。支持 "function (事件) {...}"、"(事件) => {...}"、
+            或直接写函数体（自动包裹）。元素操作（getElementById、
+            setAttribute、style…）全部写在这里，框架不参与。
+
+        名称 : str | None
+            事件名，省略时自动编号 "事件1"…。用于 `取消时间事件("名称")`、
+            `window.时间脚本.触发("名称")`、以及出错日志。
+
+        毫秒 : int
+            `触发时机.周期` 必填，正毫秒数。
+
+        时刻 : str
+            `触发时机.时刻` 必填，"HH:MM" 或 "HH:MM:SS"。
+
+        时间 : str | int | float
+            `触发时机.一次` 必填，"YYYY-MM-DD HH:MM[:SS]" 或毫秒时间戳。
+
+        数据 : 可 JSON 序列化的对象
+            原样挂到回调的 `事件.数据`，用来把 Python 侧的表格带进 JS。
+
+        次数 : int | None
+            最多触发几次，到数自动停用；None/0 = 不限。
+
+        首帧 : bool | None
+            启动时是否先补一次（默认跟随全局设置）。`时刻` 事件默认不补。
+
+        补发 : bool | None
+            `一次` 专用：打开时时间点已过，True（默认）立即补一次，False 忽略。
+
+        启用 : bool | None
+            False = 先停用，可运行时 `window.时间脚本.触发("名称")` 唤醒。
+
+        Returns
+        -------
+        str
+            最终事件名（重名会自动加 _2 后缀）。
+
+        Examples
+        --------
+        1) 每秒走秒针::
+
+            self.注册时间事件(触发时机.每秒, '''
+                var s = 事件.秒 + 事件.毫秒 / 1000;
+                document.getElementById("秒针").setAttribute(
+                    "transform", "rotate(" + s * 6 + " 200 200)");
+            ''', 名称="秒针")
+
+        2) 每帧做补间（用真实帧间隔，掉帧也不变速）::
+
+            self.注册时间事件(触发时机.每帧, 补间JS, 名称="补间")
+
+        3) 周期心跳 500ms::
+
+            self.注册时间事件(触发时机.周期, 心跳JS, 名称="心跳", 毫秒=500)
+
+        4) 每天 07:30 提醒::
+
+            self.注册时间事件(触发时机.时刻, 提醒JS, 名称="晨间",
+                             时刻="07:30", 次数=1)
+
+        5) 10 秒后谢幕（重开旧作品不补发）::
+
+            self.注册时间事件(触发时机.一次, 谢幕JS, 名称="谢幕",
+                             时间=int(time.time() * 1000) + 10000, 补发=False)
+
+        6) 把 Python 数据带进回调::
+
+            self.注册时间事件(触发时机.每帧, 走时JS, 名称="走时",
+                             数据={"图案": 数字针角, "中心": 中心列表})
+
+        详见 `神笔码靓.神笔库.时间脚本.时间脚本.注册`。
+        """
+        if self._时间脚本已注入:
+            raise RuntimeError("时间脚本已随作品写出，不能再注册；请在 创作() 里注册")
+        return self.时间脚本.注册(触发, 代码, 名称,
+                                 毫秒=毫秒, 时刻=时刻, 时间=时间, 数据=数据,
+                                 次数=次数, 首帧=首帧, 补发=补发, 启用=启用)
+
+    def 取消时间事件(self, 名称):
+        """取消一个已登记的事件（在写脚本之前生效，之后仅作语义标记）。"""
+        for 项 in self.时间脚本.注册表:
+            if 项["名称"] == 名称:
+                项["已取消"] = True
+                return True
+        return False
+
+    def 时间事件列表(self):
+        return self.时间脚本.事件列表()
+
+    def 设置时间源(self, 倍速=None, 基准毫秒=None, 时区偏移分钟=None):
+        """设置调度器的时间基准（倍速/指定起点/时区偏移）。"""
+        self.时间脚本.设置时间源(倍速=倍速, 基准毫秒=基准毫秒, 时区偏移分钟=时区偏移分钟)
+        return self.时间脚本
+
+    def _注入时间脚本(self):
+        if self._时间脚本 is None or not self._时间脚本.有注册():
+            return False
+        if self._时间脚本已注入:
+            return False
+        脚本 = self._时间脚本.生成脚本()
+        if self._时间脚本.设置.get("注入方式") == "外链":
+            import os as _os
+            from svgwrite import container
+            目录 = _os.path.dirname(_os.path.abspath(self.高清文件路径 or self.dwg.filename))
+            _os.makedirs(目录, exist_ok=True)
+            文件名 = "时间脚本.js"
+            with open(_os.path.join(目录, 文件名), "w", encoding="utf-8") as f:
+                f.write(脚本)
+            self.dwg.add(container.Script(href=文件名))
+            脚本 = None
+        if 脚本 is not None:
+            self.增加JS代码(脚本)
+        self._时间脚本已注入 = True
+        return True
+
+    # ---------- 画框能力（见 录屏页工具集） ----------
+    def 增加开场缩放(self, 设置=None, **覆盖):
+        """写入独立开场缩放脚本：放大 → 停留 → 缓动缩回 100% 居中。"""
+        from 神笔码靓.神笔库 import 录屏页工具集
+        合并 = {"图宽": getattr(self, "宽", None), "图高": getattr(self, "高", None)}
+        self.增加JS代码(录屏页工具集.生成开场脚本(
+            录屏页工具集.合并设置(合并, 设置 or {}, 覆盖)))
+
+    def 生成时钟录屏页(self, 设置=None, 文件名=None, 输出目录=None, **覆盖):
+        """把当前 SVG 包装成 16:9 录屏页（装饰 + 开场动画 + 浏览器内置录制）。
+
+        返回 HTML 路径。设置见 录屏页工具集.默认页面设置。
+        """
+        from 神笔码靓.神笔库 import 录屏页工具集
+        目录 = 输出目录 or os.path.dirname(self.高清文件路径)
+        os.makedirs(目录, exist_ok=True)
+        合并 = 录屏页工具集.合并设置({
+            "图宽": getattr(self, "宽", None),
+            "图高": getattr(self, "高", None),
+            "SVG": 录屏页工具集.提取SVG(self.高清文件路径),
+            "输出目录": 目录,
+            "脚本目录": os.getcwd(),
+        }, 设置 or {}, 覆盖)
+        HTML, 引用 = 录屏页工具集.生成录屏页(合并)
+        文件名 = 文件名 or (os.path.splitext(os.path.basename(self.高清文件路径))[0] + "_录屏.html")
+        路径 = os.path.join(目录, 文件名)
+        with open(路径, "w", encoding="utf-8") as f:
+            f.write(HTML)
+        self.录屏页路径 = 路径
+        if 引用 and not 合并.get("内嵌字体", False):
+            print(f"· 字体未内嵌，HTML 内按相对路径引用：{引用[0]}")
+            print("  （移动 HTML 时请保持与字体的相对位置；要单文件可传 内嵌字体=True）")
+        return 路径
+
     def 处理JavaScript(self):
         from svgwrite import container
+        self._注入时间脚本()          # 有登记才注入；同一作品只注入一次
         for js in self.jscripts:
+            if not js:
+                continue
             script = container.Script(content=js)
             self.dwg.add(script)
 

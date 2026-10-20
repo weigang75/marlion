@@ -14,3 +14,4 @@ from 神笔码靓.神笔库.神笔模板 import 神笔模板
 from 神笔码靓.神笔库.神笔绘图板工具 import 神笔绘图板工具
 
 from 神笔码靓.神笔库.神笔绘图板 import 神笔绘图板
+from 神笔码靓.神笔库.时间脚本 import 触发时机
